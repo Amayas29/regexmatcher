@@ -9,7 +9,7 @@ class State:
         State.cpt += 1
         self.init = init
         self.fin = fin
-        self.label = ""
+        self.label = str(self.id)
 
     def __repr__(self):
         rep = self.label

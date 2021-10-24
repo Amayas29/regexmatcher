@@ -6,14 +6,25 @@ from transition import Transition
 
 
 def to_automaton(regex: str):
-    regex = regex.split("|")
-    auto = Automaton([])
 
+    auto = Automaton([])
     init = State(True, False)
     auto.add_state(init)
 
+    end_word = False
+    if regex[-1] == "$":
+        end_word = True
+        regex = regex[:-1]
+
+    if regex[0] != "^":
+        auto.add_transition(Transition(init, "", init))
+    else:
+        regex = regex[1:]
+
+    regex = regex.split("|")
+
     for r in regex:
-        to_automaton_unit(auto, init, r)
+        to_automaton_unit(auto, init, r, end_word)
 
     return auto
 
@@ -79,6 +90,7 @@ def __create_stack(regex):
 def get_literal(auto, letter, init):
     next = State(False, False)
     auto.add_transition(Transition(init, letter, next))
+
     return next
 
 
@@ -90,31 +102,18 @@ def get_plus(auto, letter, init):
     next = State(False, False)
     auto.add_transition(Transition(init, letter, next))
     auto.add_transition(Transition(next, letter, next))
+
     return next
 
 
-def get_once_or_none(auto, letter, init, i, stack, n):
-
-    group = State(False, False)
+def get_once_or_none(auto, letter, init):
     inter = State(False, False)
-    auto.add_transition(Transition(init, letter, inter))
-    auto.add_transition(Transition(inter, "", group))
-    auto.add_transition(Transition(init, "", group))
+    auto.add_transition(Transition(init, letter, inter, True))
 
-    end = True
-    j = i + 1
-    while j < n and end:
-        if stack[j][1] != "?":
-            end = False
-        j += 1
-
-    if end:
-        group.fin = True
-
-    return group
+    return inter
 
 
-def get_numbers(auto, letter, init, min_value, max_value, i, stack, n):
+def get_numbers(auto, letter, init, min_value, max_value, i, stack, n, end_word):
     for _ in range(min_value):
         next = State(False, False)
         auto.add_transition(Transition(init, letter, next))
@@ -134,8 +133,12 @@ def get_numbers(auto, letter, init, min_value, max_value, i, stack, n):
         inc = True
         if stack[i+1][1] == "?":
             init.fin = True
+            if not end_word:
+                auto.add_transition(Transition(init, "", init))
     else:
         init.fin = True
+        if not end_word:
+            auto.add_transition(Transition(init, "", init))
 
     for j in range(rest):
 
@@ -152,51 +155,69 @@ def get_numbers(auto, letter, init, min_value, max_value, i, stack, n):
 
         else:
             curr.fin = True
+            if not end_word:
+                auto.add_transition(Transition(curr, "", curr))
 
     return inc, next
 
 
-def to_automaton_unit(auto, init, regex):
+def to_automaton_unit(auto, init, regex, end_word):
 
     stack = __create_stack(regex)
     n = len(stack)
     i = 0
+    finals = []
+    only_once = True
+
     while i < n:
 
         value = stack[i]
 
         if value[1] == '':
             init = get_literal(auto, value[0], init)
+            only_once = False
 
         elif value[1] == '*':
             get_star(auto, value[0], init)
-            i += 1
-            continue
+            only_once = False
 
         elif value[1] == '+':
             init = get_plus(auto, value[0], init)
+            only_once = False
 
         elif value[1] == "?":
-            init = get_once_or_none(auto, value[0], init, i, stack, n)
-
+            init = get_once_or_none(auto, value[0], init)
+            finals.append(init)
         else:
+            only_once = False
             values = value[1].split(",")
             min_value = int(values[0])
             max_value = values[1]
 
             inc, init = get_numbers(auto, value[0], init,
-                                    min_value, max_value, i, stack, n)
+                                    min_value, max_value, i, stack, n, end_word)
             if inc:
                 i += 1
 
         i += 1
-    init.fin = True
+
+    if only_once:
+        for f in finals:
+            f.fin = True
+            if not end_word:
+                auto.add_transition(Transition(f, "", f))
+    else:
+        init.fin = True
+        if not end_word:
+            auto.add_transition(Transition(init, "", init))
 
 
 def match(text, regex):
-    return Automaton.accept(to_automaton(regex), text)
+    auto = to_automaton(regex)
+    auto.show("auto")
+    return Automaton.execute(auto, text)
 
 
 if __name__ == "__main__":
 
-    to_automaton("am*y{2,}k|JD+dd*as{2,3}|s?a?n?b*a").show("auto")
+    to_automaton("^am*y{2,}k|JD+dd*as{2,3}|s?a?n?$").show("auto")

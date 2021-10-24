@@ -2,6 +2,7 @@
 
 import os
 from state import State
+from copy import copy
 
 
 class Automaton:
@@ -89,7 +90,8 @@ class Automaton:
         succs = []
 
         for t in self.get_list_transitions_from(state):
-            if (t.tag == letter or t.tag == "") and t.dest_state not in succs:
+
+            if ((t.tag == letter or t.tag == "") and t.dest_state not in succs) or t.if_transition:
                 succs.append(t.dest_state)
 
         return succs
@@ -103,10 +105,11 @@ class Automaton:
             succs_by_letter = succs_by_letter.union(
                 self.succ_elem(state, letter))
 
+        # print(list(succs_by_letter), letter)
         return list(succs_by_letter)
 
-    @staticmethod
-    def accept(auto, word):
+    @ staticmethod
+    def execute(auto, word):
 
         list_states = auto.get_list_initial_states()
 
