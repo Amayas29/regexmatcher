@@ -4,12 +4,13 @@ class State:
 
     cpt = 0
 
-    def __init__(self, init, fin):
+    def __init__(self, init, fin, if_state=None):
         self.id = State.cpt
         State.cpt += 1
         self.init = init
         self.fin = fin
         self.label = str(self.id)
+        self.if_state = False if if_state is None else if_state
 
     def __repr__(self):
         rep = self.label

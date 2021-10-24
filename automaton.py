@@ -2,7 +2,6 @@
 
 import os
 from state import State
-from copy import copy
 
 
 class Automaton:
@@ -85,38 +84,42 @@ class Automaton:
 
         return list
 
-    def succ_elem(self, state, letter):
+    def succ_elem(self, state, letter, matched):
 
         succs = []
+        forward = True
 
         for t in self.get_list_transitions_from(state):
 
-            if ((t.tag == letter or t.tag == "") and t.dest_state not in succs) or t.if_transition:
+            if (t.tag == letter or t.tag == "" or t.if_transition) and t.dest_state not in succs:
                 succs.append(t.dest_state)
+                if t.tag != "" or (t.if_transition and t.tag == letter):
+                    matched += 1
 
-        return succs
+        return succs, matched
 
-    def succ_list_state(self, list_states, letter):
+    def succ_list_state(self, list_states, letter, matched):
 
         succs_by_letter = set()
 
         for state in list_states:
 
-            succs_by_letter = succs_by_letter.union(
-                self.succ_elem(state, letter))
+            l, matched = self.succ_elem(state, letter, matched)
+            succs_by_letter = succs_by_letter.union(l)
 
-        # print(list(succs_by_letter), letter)
-        return list(succs_by_letter)
+        return list(succs_by_letter), matched
 
     @ staticmethod
     def execute(auto, word):
 
+        matched = 0
         list_states = auto.get_list_initial_states()
 
         for letter in word:
-            list_states = auto.succ_list_state(list_states, letter)
+            list_states, matched = auto.succ_list_state(
+                list_states, letter, matched)
 
-        return State.contains_final(list_states)
+        return State.contains_final(list_states), matched
 
     # DEBUG
 

@@ -107,7 +107,7 @@ def get_plus(auto, letter, init):
 
 
 def get_once_or_none(auto, letter, init):
-    inter = State(False, False)
+    inter = State(False, False, True)
     auto.add_transition(Transition(init, letter, inter, True))
 
     return inter
@@ -214,8 +214,10 @@ def to_automaton_unit(auto, init, regex, end_word):
 
 def match(text, regex):
     auto = to_automaton(regex)
-    auto.show("auto")
-    return Automaton.execute(auto, text)
+    # auto.show("auto")
+    result, matched = Automaton.execute(auto, text)
+
+    return result and matched != 0
 
 
 if __name__ == "__main__":

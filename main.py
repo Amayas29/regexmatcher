@@ -3,10 +3,9 @@
 from regex import match
 import re
 
-text = "ghabac"
-regex = "ab?x?d?$"
+text = "AZdslkn jzobc zejk cj evco bc oazebucodib z"
+regex = "a?c?d?"
 
-print(regex, text)
 
 m = re.match(regex, text)
 m = "None" if m is None else m.group(0)
