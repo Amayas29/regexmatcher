@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from automaton import Automaton
-from state import State
-from transition import Transition
+from src.automaton import Automaton
+from src.state import State
+from src.transition import Transition
 
 
 def to_automaton(regex: str):

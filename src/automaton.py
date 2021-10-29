@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from state import State
+from src.state import State
 
 
 class Automaton:
